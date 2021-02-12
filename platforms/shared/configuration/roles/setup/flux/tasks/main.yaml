@@ -1,0 +1,64 @@
+---
+- name: Check if Flux is running
+  k8s_info:
+    kind: Pod
+    namespace: default
+    kubeconfig: "{{ kubeconfig_path }}"
+    context: "{{ kubecontext }}"
+    label_selectors:
+      - app = flux
+      - release = flux-{{ network.env.type }}
+    field_selectors:
+      - status.phase=Running
+  register: flux_service
+  tags:
+    - flux
+
+- name: Get ssh known hosts
+  shell: |
+    ssh-keyscan {{ git_host }} > flux_known_hosts
+    chmod -R 777 flux_known_hosts
+  when: flux_service.resources|length == 0
+
+- name: Helm repo add
+  shell: |
+    helm repo add fluxcd https://charts.fluxcd.io
+  when: flux_service.resources|length == 0
+  tags:
+    - flux
+
+- name: Install flux
+  shell: |
+    KUBECONFIG={{ kubeconfig_path }} kubectl create secret generic git-auth-{{ network.env.type }} --from-file=identity={{ git_key }} --namespace default
+    KUBECONFIG={{ kubeconfig_path }} kubectl apply -f https://raw.githubusercontent.com/fluxcd/helm-operator/{{ helm_operator_version }}/deploy/crds.yaml --context="{{ kubecontext }}"
+    KUBECONFIG={{ kubeconfig_path }} helm upgrade --install flux-{{ network.env.type }} {{ playbook_dir }}/../../../platforms/shared/charts/flux --namespace default --set git.secretName=git-auth-{{ network.env.type }} --set rbac.create=true --set git.timeout=200s --set git.pollInterval=2m --set git.url='{{ git_url }}' --set git.branch={{ git_branch }} --set git.label='sync-{{ network.env.type }}' --set git.path="{{ git_path }}" --set-file ssh.known_hosts=flux_known_hosts --set registry.insecureHosts="{{ network.docker.url }}" --kube-context="{{ kubecontext }}"
+    KUBECONFIG={{ kubeconfig_path }} helm upgrade --install flux-{{ network.env.type }}-helm-operator fluxcd/helm-operator --namespace default --set rbac.create=true --set git.timeout=200s --set git.pollInterval=2m --set git.url='{{ git_url }}' --set git.ssh.secretName=git-auth-{{ network.env.type }} --set-file git.ssh.known_hosts=flux_known_hosts --set helm.versions=v3 --kube-context="{{ kubecontext }}"
+  when: flux_service.resources|length == 0
+  tags:
+    - flux
+
+# Wait for flux pod to start running
+- name: wait for pods to come up
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
+  vars:
+    namespace: default
+    kubeconfig: "{{ kubeconfig_path }}"
+    context: "{{ kubecontext }}"
+    component_name: flux
+    component_type: "Pod"
+    label_selectors:
+      - app = flux
+      - release = flux-{{ network.env.type }}
+  when: flux_service.resources|length == 0
+
+- name: Get ssh key
+  shell: |
+    KUBECONFIG={{ kubeconfig_path }} kubectl -n default logs deployment/flux-{{ network.env.type }} | grep identity.pub | cut -d '"' -f2
+  register: ssh_key
+  changed_when: false
+
+- name: Output ssh key
+  debug:
+    var: ssh_key.stdout
+  changed_when: false
