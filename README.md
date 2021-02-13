@@ -1,6 +1,3 @@
-A sample README.md file
-
-# Blockchain-based Secure Software Assets Management (BloSS@M)
 ## CN-19-0103
 ---
 ## Our Goal
@@ -8,11 +5,4 @@ The goal of this project is to demonstrate, through a proof of concept applicati
 
 ## Code status, pre-release, production.
 The project is under development
-
-## Installation Process
-TBD
-
-## Acknowledgement for reused code if any
-TBD
-
 
