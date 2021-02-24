@@ -1,0 +1,48 @@
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: anchorpeer-allchannel-carrier
+  namespace: carrier-net
+  annotations:
+    fluxcd.io/automated: "false"
+spec:
+  releaseName: anchorpeer-allchannel-carrier
+  chart:
+    git: git@github.com:usnistgov/blossom.git
+    ref: baf-gitops-blossom
+    path: platforms/hyperledger-fabric/charts/anchorpeer
+  values:
+    metadata:
+      namespace: carrier-net
+      images:
+        fabrictools: hyperledger/fabric-tools:1.4.4
+        alpineutils: index.docker.io/hyperledgerlabs/alpine-utils:1.0
+
+    peer:
+      name: peer0
+      address: peer0.carrier-net.svc.cluster.local:7051
+      localmspid: carrierMSP
+      loglevel: debug
+      tlsstatus: true
+
+    vault:
+      role: vault-role
+      address: http://ip-10-20-201-64.us-east-2.compute.internal:30358
+      authpath: carrier-net-auth
+      adminsecretprefix: secret/crypto/peerOrganizations/carrier-net/users/admin
+      orderersecretprefix: secret/crypto/peerOrganizations/carrier-net/orderer
+      serviceaccountname: vault-auth
+      imagesecretname: regcred
+
+    channel:
+      name: allchannel      
+    orderer:
+      address: orderer1.supplychain-net.svc.cluster.local:7050
+    anchorstx: |-
+      CrwCChAKDggCIgphbGxjaGFubmVsEqcCCqQCCgphbGxjaGFubmVsEloSWAoLQXBwbGljYXRpb24S
+      SQgBEj0KCmNhcnJpZXJNU1ASLxoHCgNNU1ASACILCgdSZWFkZXJzEgAiCwoHV3JpdGVycxIAIgoK
+      BkFkbWlucxIAKgZBZG1pbnMauQEStgEKC0FwcGxpY2F0aW9uEqYBCAESmQEKCmNhcnJpZXJNU1AS
+      igEIARpPCgtBbmNob3JQZWVycxJAEjYKNAovcGVlcjAuY2Fycmllci1uZXQuY2Fycmllci1uZXQu
+      c3ZjLmNsdXN0ZXIubG9jYWwQ+0EaBkFkbWlucxoHCgNNU1ASACILCgdSZWFkZXJzEgAiCwoHV3Jp
+      dGVycxIAIgoKBkFkbWlucxIAKgZBZG1pbnMqBkFkbWlucw==
+
