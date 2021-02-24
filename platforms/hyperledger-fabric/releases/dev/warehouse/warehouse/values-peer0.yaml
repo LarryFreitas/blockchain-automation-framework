@@ -1,0 +1,63 @@
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: warehouse-peer0
+  namespace: warehouse-net
+  annotations:
+    fluxcd.io/automated: "false"
+spec:
+  releaseName: warehouse-peer0
+  chart:
+    git: git@github.com:usnistgov/blossom.git
+    ref: baf-gitops-blossom
+    path: platforms/hyperledger-fabric/charts/peernode    
+  values:
+    metadata:
+      namespace: warehouse-net
+      images:
+        couchdb: hyperledger/fabric-couchdb:0.4.18
+        peer: hyperledger/fabric-peer:1.4.4
+        alpineutils: index.docker.io/hyperledgerlabs/alpine-utils:1.0
+        
+    peer:
+      name: peer0
+      gossippeeraddress: peer0.warehouse-net:7051
+      gossipexternalendpoint: peer0.warehouse-net.warehouse-net.svc.cluster.local:8443
+      localmspid: warehouseMSP
+      loglevel: info
+      tlsstatus: true
+      builder: hyperledger/fabric-ccenv:1.4.4
+      couchdb:
+        username: warehouse-user
+
+    storage:
+      peer:
+        storageclassname: warehousesc
+        storagesize: 512Mi
+      couchdb:
+        storageclassname: warehousesc
+        storagesize: 1Gi
+
+    vault:
+      role: vault-role
+      address: http://ip-10-20-201-64.us-east-2.compute.internal:30358
+      authpath: warehouse-net-auth
+      secretprefix: secret/crypto/peerOrganizations/warehouse-net/peers/peer0.warehouse-net
+      secretambassador: secret/crypto/peerOrganizations/warehouse-net/ambassador
+      serviceaccountname: vault-auth
+      imagesecretname: regcred
+      secretcouchdbpass: secret/credentials/warehouse-net/couchdb/warehouse?user
+
+    service:
+      servicetype: ClusterIP
+      ports:
+        grpc:
+          clusteripport: 7051
+        events:
+          clusteripport: 7053
+        couchdb:
+          clusteripport: 5984
+          
+    proxy:
+      provider: haproxy
+      external_url_suffix: warehouse-net.svc.cluster.local
