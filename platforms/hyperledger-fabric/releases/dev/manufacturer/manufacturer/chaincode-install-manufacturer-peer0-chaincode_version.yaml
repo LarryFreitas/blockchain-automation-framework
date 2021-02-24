@@ -1,0 +1,52 @@
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: chaincode-install-manufacturer-peer0-chaincode_version
+  namespace: manufacturer-net
+  annotations:
+    fluxcd.io/automated: "false"
+spec:
+  releaseName: chaincode-install-manufacturer-peer0-chaincode_version
+  chart:
+    git: git@github.com:usnistgov/blossom.git
+    ref: baf-gitops-blossom
+    path: platforms/hyperledger-fabric/charts/install_chaincode
+  values:
+    metadata:
+      namespace: manufacturer-net
+      network:
+        version: 1.4.4
+      images:
+        fabrictools: hyperledger/fabric-tools:1.4.4
+        alpineutils: index.docker.io/hyperledgerlabs/alpine-utils:1.0
+    peer:
+      name: peer0
+      address: peer0.manufacturer-net:7051
+      localmspid: manufacturerMSP
+      loglevel: debug
+      tlsstatus: true
+    vault:
+      role: vault-role
+      address: http://ip-10-20-201-64.us-east-2.compute.internal:30358
+      authpath: manufacturer-net-auth
+      adminsecretprefix: secret/crypto/peerOrganizations/manufacturer-net/users/admin 
+      orderersecretprefix: secret/crypto/peerOrganizations/manufacturer-net/orderer
+      serviceaccountname: vault-auth
+      imagesecretname: regcred
+      secretgitprivatekey: secret/credentials/manufacturer-net/git?git_password
+      tls: false
+    orderer:
+      address: orderer1.supplychain-net.svc.cluster.local:7050
+    chaincode:
+      builder: hyperledger/fabric-ccenv:1.4.4
+      name: chaincode_name
+      version: chaincode_version
+      lang: golang
+      maindirectory: chaincode_main
+      repository:
+        hostname: "github.com"
+        git_username: "git_username"
+        url: github.com/<username>/blockchain-automation-framework.git
+        branch: baf-gitops-blossom
+        path: chaincode_src
+      endorsementpolicies:  ''
