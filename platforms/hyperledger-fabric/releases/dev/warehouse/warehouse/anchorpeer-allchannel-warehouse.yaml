@@ -1,0 +1,48 @@
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: anchorpeer-allchannel-warehouse
+  namespace: warehouse-net
+  annotations:
+    fluxcd.io/automated: "false"
+spec:
+  releaseName: anchorpeer-allchannel-warehouse
+  chart:
+    git: git@github.com:usnistgov/blossom.git
+    ref: baf-gitops-blossom
+    path: platforms/hyperledger-fabric/charts/anchorpeer
+  values:
+    metadata:
+      namespace: warehouse-net
+      images:
+        fabrictools: hyperledger/fabric-tools:1.4.4
+        alpineutils: index.docker.io/hyperledgerlabs/alpine-utils:1.0
+
+    peer:
+      name: peer0
+      address: peer0.warehouse-net.svc.cluster.local:7051
+      localmspid: warehouseMSP
+      loglevel: debug
+      tlsstatus: true
+
+    vault:
+      role: vault-role
+      address: http://ip-10-20-201-64.us-east-2.compute.internal:30358
+      authpath: warehouse-net-auth
+      adminsecretprefix: secret/crypto/peerOrganizations/warehouse-net/users/admin
+      orderersecretprefix: secret/crypto/peerOrganizations/warehouse-net/orderer
+      serviceaccountname: vault-auth
+      imagesecretname: regcred
+
+    channel:
+      name: allchannel      
+    orderer:
+      address: orderer1.supplychain-net.svc.cluster.local:7050
+    anchorstx: |-
+      CsQCChAKDggCIgphbGxjaGFubmVsEq8CCqwCCgphbGxjaGFubmVsElwSWgoLQXBwbGljYXRpb24S
+      SwgBEj8KDHdhcmVob3VzZU1TUBIvGgcKA01TUBIAIgsKB1JlYWRlcnMSACILCgdXcml0ZXJzEgAi
+      CgoGQWRtaW5zEgAqBkFkbWlucxq/ARK8AQoLQXBwbGljYXRpb24SrAEIARKfAQoMd2FyZWhvdXNl
+      TVNQEo4BCAEaUwoLQW5jaG9yUGVlcnMSRBI6CjgKM3BlZXIwLndhcmVob3VzZS1uZXQud2FyZWhv
+      dXNlLW5ldC5zdmMuY2x1c3Rlci5sb2NhbBD7QRoGQWRtaW5zGgcKA01TUBIAIgsKB1JlYWRlcnMS
+      ACILCgdXcml0ZXJzEgAiCgoGQWRtaW5zEgAqBkFkbWlucyoGQWRtaW5z
+
