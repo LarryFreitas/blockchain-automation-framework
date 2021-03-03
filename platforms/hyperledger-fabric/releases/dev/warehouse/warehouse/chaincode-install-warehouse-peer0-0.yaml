@@ -1,0 +1,52 @@
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: chaincode-install-warehouse-peer0-0
+  namespace: warehouse-net
+  annotations:
+    fluxcd.io/automated: "false"
+spec:
+  releaseName: chaincode-install-warehouse-peer0-0
+  chart:
+    git: git@github.com:usnistgov/blossom.git
+    ref: baf-east-1
+    path: platforms/hyperledger-fabric/charts/install_chaincode
+  values:
+    metadata:
+      namespace: warehouse-net
+      network:
+        version: 1.4.4
+      images:
+        fabrictools: hyperledger/fabric-tools:1.4.4
+        alpineutils: index.docker.io/hyperledgerlabs/alpine-utils:1.0
+    peer:
+      name: peer0
+      address: peer0.warehouse-net:7051
+      localmspid: warehouseMSP
+      loglevel: debug
+      tlsstatus: true
+    vault:
+      role: vault-role
+      address: http://ip-10-10-201-117.ec2.internal:31524
+      authpath: warehouse-net-auth
+      adminsecretprefix: secret/crypto/peerOrganizations/warehouse-net/users/admin 
+      orderersecretprefix: secret/crypto/peerOrganizations/warehouse-net/orderer
+      serviceaccountname: vault-auth
+      imagesecretname: regcred
+      secretgitprivatekey: secret/credentials/warehouse-net/git?git_password
+      tls: false
+    orderer:
+      address: orderer1.supplychain-net.svc.cluster.local:7050
+    chaincode:
+      builder: hyperledger/fabric-ccenv:1.4.4
+      name: fabcar
+      version: 0
+      lang: golang
+      maindirectory: chaincode-fabcar
+      repository:
+        hostname: "https:"
+        git_username: "git_username"
+        url: https://github.com/hyperledger/fabric-samples.git
+        branch: master
+        path: chaincode/fabcar/go
+      endorsementpolicies:  ''
