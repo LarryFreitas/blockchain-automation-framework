@@ -1,0 +1,28 @@
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: store-net-ca-tools
+  namespace: store-net
+  annotations:
+    fluxcd.io/automated: "false"
+spec:
+  releaseName: store-net-ca-tools
+  chart:
+    git: git@github.com:usnistgov/blossom.git
+    ref: baf-east-1
+    path: platforms/hyperledger-fabric/charts/catools
+  values:
+    metadata:
+      namespace: store-net
+      name: ca-tools
+
+    replicaCount: 1
+
+    image:
+      repository: hyperledger/fabric-ca-tools
+      tag: 1.2.1
+      pullPolicy: IfNotPresent
+      
+    storage:
+      storageclassname: storesc
+      storagesize: 512Mi
