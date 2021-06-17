@@ -1,4 +1,4 @@
 [submodule "blossom-sam"]
 	path = blossom-sam
-	url = https://github.com/usnistgov/blossom-sam.git
+	url = https://github.com/usnistgov/blossom-sam
 	branch = master
